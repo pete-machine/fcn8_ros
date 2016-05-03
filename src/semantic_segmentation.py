@@ -19,19 +19,6 @@ from functionsSegmanticSegmentation import initCaffeSS, predictImageSS
 # 0.aeroplane, 1. bicycle, 2 bird, 3.boat, 4. bottle, 5. bus, 6. car, 7. cat, 8. chair, 9. cow, 10.diningtable
 # 11. dog, 12. horse, 13. motorbike, 14. person, 15. pottedplant, 16. sheep, 17. sofa, 18. train, 19. tvmonitor, 20. pedestrian
 # REMAPPING (agriculture classes)
-rospy.init_node('SemanticSegmentation', anonymous=True)
-nodeName = rospy.get_name()
-topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
-topicOutName = rospy.get_param(nodeName+'/topicOutName', '/detImageUnknown')
-dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
-dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
-dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
-dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
-objectTypeInt = rospy.get_param(nodeName+'/objectTypeInt', 1000) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
-imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
-
-print "dirRemapping:", dirRemapping
 
 def numbers_to_strings(argument):
     switcher = {
@@ -69,11 +56,41 @@ def numbers_to_strings(argument):
         31: "PD_Pedestrian",
     }
     return switcher.get(argument, "Unknown")
+    
+topicInName  = rospy.get_param('/semantic_segmentation/topicInName', '/imageUnknown')
+topicOutName = rospy.get_param('/semantic_segmentation/topicOutName', '/detImageUnknown')
+dirModelDescription = rospy.get_param('/semantic_segmentation/dirModelDescription', '/detImageUnknown')
+dirModelVaules = rospy.get_param('/semantic_segmentation/dirModelVaules', '/notDefined')
+dirTestImage = rospy.get_param('/semantic_segmentation/dirTestImage', '/notDefined')
+dirRemapping = rospy.get_param('/semantic_segmentation/dirRemapping', '/notDefined')
+#objectTypeInt = rospy.get_param('/semantic_segmentation/objectTypeInt', 1000) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType =  np.array([False, False, False, False, False, False, False, False, False, False, False])
+objectType[0] = rospy.get_param('/semantic_segmentation/objectTypeUnknown', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[1] = rospy.get_param('/semantic_segmentation/objectTypeAnimal', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[2] = rospy.get_param('/semantic_segmentation/objectTypeBuilding', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[3] = rospy.get_param('/semantic_segmentation/objectTypeField', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[4] = rospy.get_param('/semantic_segmentation/objectTypeGround', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[5] = rospy.get_param('/semantic_segmentation/objectTypeObstacle', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[6] = rospy.get_param('/semantic_segmentation/objectTypePerson', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[7] = rospy.get_param('/semantic_segmentation/objectTypeShelterbelt', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[8] = rospy.get_param('/semantic_segmentation/objectTypeSky', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[9] = rospy.get_param('/semantic_segmentation/objectTypeVehicle', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+objectType[10] = rospy.get_param('/semantic_segmentation/objectTypeWater', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
 
-topicOutName = '/detectionImage' + numbers_to_strings(objectTypeInt)
+
+
+imgDimWidth   = rospy.get_param('/semantic_segmentation/imgDimWidth', 800)
+imgDimHeight  = rospy.get_param('/semantic_segmentation/imgDimHeight', 600)
+
+print "dirRemapping:", dirRemapping
+
+pubImageObjs = list() 
+for iType in range(0,len(objectType)):
+    topicOutName = '/detectionImage' + numbers_to_strings(iType+20)
+    pubImageObjs.append(rospy.Publisher(topicOutName, msgImage , queue_size=1))
 
 #print topicOutName
-pubImage = rospy.Publisher(topicOutName, msgImage , queue_size=1)
+
 bridge = CvBridge()
 
 
@@ -81,7 +98,6 @@ im = ImagePil.open(dirTestImage)
 dirModel = dirModelVaules
 dirArchi = dirModelDescription
 #dirRemapping = "../remappingObjectTypes.mat"
-objectType = objectTypeInt-20 # -20 to shift to the object classes in the SS functions.
 net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
 
 #image_message = bridge.cv2_to_imgmsg(predictionRemappedProbability, encoding="mono8")
@@ -91,25 +107,50 @@ net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
 
 def callbackImage_received(data):
     #blank_image = np.zeros((imgDimHeight,imgDimWidth,1), np.uint8)
-    print "ImageReceived"
-    t1 = time.clock()    
-    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
-    cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
-    print "ImageShape: ",  cv_image.shape
-    predictionRemapped, predictionRemappedProbability = predictImageSS(net,cv_image,objectType,classRemapping)
     
-    print "Image processed in: ", time.clock()-t1, "s"
+    #t1 = time.clock()
+    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
+    
+    #t2 = time.clock()
+    cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
+    print "ImageReceived! Image dim: ", cv_image.shape
+    #t3 = time.clock()
+    #print "ImageShape: ",  cv_image.shape
+    out,maxValues = predictImageSS(net,cv_image,classRemapping)
+    
+    
+    for iType in range(0,len(objectType)):
+        if(objectType[iType]==True):
+            predictionRemappedProbability = np.zeros(out.shape)
+            test = np.in1d(out, np.array(np.argwhere(classRemapping==objectType)))
+            predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
+            predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
+            #t4 = time.clock()
+            image_message = bridge.cv2_to_imgmsg(np.uint8(predictionRemappedProbability*255), encoding="mono8")
+            #t5 = time.clock()
+            pubImageObjs[iType].publish(image_message)
+            #t6 = time.clock()
+    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
+    
     #redictionRemappedProbability = cv_image 
-    print predictionRemappedProbability
-    image_message = bridge.cv2_to_imgmsg(np.uint8(predictionRemappedProbability*255), encoding="mono8")
-    pubImage.publish(image_message)
+    #print predictionRemappedProbability
+    
+#    print "Image processed in: ", time.clock()-t1, "s"
+#    print "     bridge  in: ", t2-t1, "s"
+#    print "     resize image: ", t3-t2, "s"
+#    print "     forward pass (in predictImageSS): ", t4-t3, "s"
+#    print "     bridge out: ", t5-t4, "s"
+#    print "     publish: ", t6-t5, "s"
 
 
 
 # main
 def main():
     print ''
-    print 'SemanticSegmentation  publishing:"', topicOutName, ', receiving:"', topicInName
+    for iType in range(0,len(objectType)):
+        if(objectType[iType]==True):
+            print 'SemanticSegmentation  publishing:"', '/detectionImage' + numbers_to_strings(iType+20), ', receiving:"', topicInName
+    
     #print(topicInName)
     #global soundhandle
     rospy.init_node('SemanticSegmentation', anonymous=True)
