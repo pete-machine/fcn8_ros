@@ -19,16 +19,17 @@ from functionsSegmanticSegmentation import initCaffeSS, predictImageSS
 # 0.aeroplane, 1. bicycle, 2 bird, 3.boat, 4. bottle, 5. bus, 6. car, 7. cat, 8. chair, 9. cow, 10.diningtable
 # 11. dog, 12. horse, 13. motorbike, 14. person, 15. pottedplant, 16. sheep, 17. sofa, 18. train, 19. tvmonitor, 20. pedestrian
 # REMAPPING (agriculture classes)
-
-topicInName  = rospy.get_param('/semantic_segmentation/topicInName', '/imageUnknown')
-topicOutName = rospy.get_param('/semantic_segmentation/topicOutName', '/detImageUnknown')
-dirModelDescription = rospy.get_param('/semantic_segmentation/dirModelDescription', '/detImageUnknown')
-dirModelVaules = rospy.get_param('/semantic_segmentation/dirModelVaules', '/notDefined')
-dirTestImage = rospy.get_param('/semantic_segmentation/dirTestImage', '/notDefined')
-dirRemapping = rospy.get_param('/semantic_segmentation/dirRemapping', '/notDefined')
-objectTypeInt = rospy.get_param('/semantic_segmentation/objectTypeInt', 1000) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-imgDimWidth   = rospy.get_param('/semantic_segmentation/imgDimWidth', 800)
-imgDimHeight  = rospy.get_param('/semantic_segmentation/imgDimHeight', 600)
+rospy.init_node('SemanticSegmentation', anonymous=True)
+nodeName = rospy.get_name()
+topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
+topicOutName = rospy.get_param(nodeName+'/topicOutName', '/detImageUnknown')
+dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
+dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
+dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
+dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
+objectTypeInt = rospy.get_param(nodeName+'/objectTypeInt', 1000) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
+imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
 
 print "dirRemapping:", dirRemapping
 
