@@ -90,18 +90,31 @@ net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
 
 def callbackImage_received(data):
     #blank_image = np.zeros((imgDimHeight,imgDimWidth,1), np.uint8)
-    print "ImageReceived"
-    t1 = time.clock()    
-    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
-    cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
-    print "ImageShape: ",  cv_image.shape
-    predictionRemapped, predictionRemappedProbability = predictImageSS(net,cv_image,objectType,classRemapping)
     
-    print "Image processed in: ", time.clock()-t1, "s"
+    t1 = time.clock()
+    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
+    
+    t2 = time.clock()
+    cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
+    print "ImageReceived! Image dim: ", cv_image.shape
+    t3 = time.clock()
+    #print "ImageShape: ",  cv_image.shape
+    predictionRemappedProbability = predictImageSS(net,cv_image,objectType,classRemapping)
+    
+    
     #redictionRemappedProbability = cv_image 
-    print predictionRemappedProbability
+    #print predictionRemappedProbability
+    t4 = time.clock()
     image_message = bridge.cv2_to_imgmsg(np.uint8(predictionRemappedProbability*255), encoding="mono8")
+    t5 = time.clock()
     pubImage.publish(image_message)
+    t6 = time.clock()
+    print "Image processed in: ", time.clock()-t1, "s"
+    print "     bridge  in: ", t2-t1, "s"
+    print "     resize image: ", t3-t2, "s"
+    print "     forward pass (in predictImageSS): ", t4-t3, "s"
+    print "     bridge out: ", t5-t4, "s"
+    print "     publish: ", t6-t5, "s"
 
 
 

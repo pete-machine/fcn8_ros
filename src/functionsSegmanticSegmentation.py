@@ -11,20 +11,22 @@ import matplotlib.pyplot as plt
 import time
 import caffe
 
+
 def initCaffeSS(dirArchi,dirModel,dirRemapping):
     test = sio.loadmat(dirRemapping)
     classRemapping = np.concatenate((np.array([0]),np.array(test['newSorting'][:,1])),axis=0)
     
     # load net
     caffe.set_mode_cpu()
+    
     net = caffe.Net(dirArchi, dirModel, caffe.TEST)
     #net = caffe.Net('fcn-32s-pascal-deploy.prototxt', 'fcn-32s-pascalcontext.caffemodel', caffe.TEST)
-    #caffe.set_mode_gpu()
-    #caffe.set_device(0)
+    
     # load image, switch to BGR, subtract mean, and make dims C x H x W for Caffe
     return net,classRemapping
     
 def predictImageSS(net,im,objectType,classRemapping):
+    #t1 = time.clock();
     in_ = np.array(im, dtype=np.float32)
     in_ = in_[:,:,::-1]
     in_ -= np.array((104.00698793,116.66876762,122.67891434))
@@ -34,22 +36,25 @@ def predictImageSS(net,im,objectType,classRemapping):
     # shape for input (data blob is N x C x H x W), set data
     net.blobs['data'].reshape(1, *in_.shape)
     net.blobs['data'].data[...] = in_
+    #print "predictImageSS: Prior forward pass time:", time.clock()-t1, "seconds"
+    
     # run net and take argmax for prediction
-
-    t1 = time.time();
+    caffe.set_mode_gpu()
+    caffe.set_device(2)
+    #t1 = time.clock();
     net.forward()
-    print "Forward pass time:", time.time()-t1, "seconds"
+    #print "predictImageSS: Forward pass time:", time.clock()-t1, "seconds"
 
 
-    t1 = time.time();
+    #t1 = time.clock();
     out = net.blobs['score-final'].data[0].argmax(axis=0)
     predictionRemappedProbability = np.zeros(out.shape)
     maxValues = net.blobs['score-final'].data[0].max(axis=0)
     test = np.in1d(out, np.array(np.argwhere(classRemapping==objectType)))
     predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
     predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
-    print "Time for code not related to SS is", time.time()-t1, "seconds"
-    return predictionRemapped, predictionRemappedProbability
+    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
+    return predictionRemappedProbability
 
 #im = Image.open('Street2.jpg')
 #dirArchi = '/home/repete/blank_ws/src/semantic_segmentation/models/fcn-8s-pascal-deploy.prototxt'
