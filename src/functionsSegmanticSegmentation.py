@@ -25,7 +25,7 @@ def initCaffeSS(dirArchi,dirModel,dirRemapping):
     # load image, switch to BGR, subtract mean, and make dims C x H x W for Caffe
     return net,classRemapping
     
-def predictImageSS(net,im,objectType,classRemapping):
+def predictImageSS(net,im,classRemapping):
     #t1 = time.clock();
     in_ = np.array(im, dtype=np.float32)
     in_ = in_[:,:,::-1]
@@ -48,13 +48,17 @@ def predictImageSS(net,im,objectType,classRemapping):
 
     #t1 = time.clock();
     out = net.blobs['score-final'].data[0].argmax(axis=0)
-    predictionRemappedProbability = np.zeros(out.shape)
     maxValues = net.blobs['score-final'].data[0].max(axis=0)
-    test = np.in1d(out, np.array(np.argwhere(classRemapping==objectType)))
-    predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
-    predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
-    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
-    return predictionRemappedProbability
+    return out,maxValues
+#    maxValues = net.blobs['score-final'].data[0].max(axis=0)
+#    for iType in range(0,len(objectType)):
+#        if(objectType[iType]==True):
+#            predictionRemappedProbability = np.zeros(out.shape)
+#            test = np.in1d(out, np.array(np.argwhere(classRemapping==objectType)))
+#            predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
+#            predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
+#    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
+#    return predictionRemappedProbability
 
 #im = Image.open('Street2.jpg')
 #dirArchi = '/home/repete/blank_ws/src/semantic_segmentation/models/fcn-8s-pascal-deploy.prototxt'

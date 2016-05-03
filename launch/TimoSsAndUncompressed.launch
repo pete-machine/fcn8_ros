@@ -1,7 +1,17 @@
 <launch>
 	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="semantic_segmentation" respawn="true" output="screen">
 		<param name="topicInName" value="/Logitech_webcam/image_raw" />
-		<param name="objectTypeInt" value="26" />
+		<param name="objectTypeUnknown" value="True" />
+		<param name="objectTypeAnimal" value="True" />
+		<param name="objectTypeBuilding" value="True" />
+		<param name="objectTypeField" value="True" />
+		<param name="objectTypeGround" value="True" />
+		<param name="objectTypeObstacle" value="True" />
+		<param name="objectTypePerson" value="True" />
+		<param name="objectTypeShelterbelt" value="True" />
+		<param name="objectTypeSky" value="True" />
+		<param name="objectTypeVehicle" value="True" />
+		<param name="objectTypeWater" value="True" />
 		<!-- Select and object type (0-19 is YOLO darknet_ros, 31 is a pedestrian detector)  20. SS_unknown upto 30. SS_water  -->
 		<param name="imgDimWidth" value="400" />
 		<param name="imgDimHeight" value="300" />
