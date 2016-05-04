@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import rospy
-import time
-from collections import namedtuple
-from std_msgs.msg import Float64MultiArray
-from std_msgs.msg import UInt16
+#import time
+#from collections import namedtuple
+#from std_msgs.msg import Float64MultiArray
+#from std_msgs.msg import UInt16
 from sensor_msgs.msg import Image as msgImage
 from PIL import Image as ImagePil
 import sys
@@ -12,7 +12,7 @@ sys.path.append("/usr/lib/python2.7/dist-packages")
 from cv_bridge import CvBridge, CvBridgeError
 import cv2 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from functionsSegmanticSegmentation import initCaffeSS, predictImageSS
 
 
@@ -54,33 +54,37 @@ def numbers_to_strings(argument):
         29: "SS_vehicle",
         30: "SS_water",
         31: "PD_Pedestrian",
+        32: "thermal",
     }
     return switcher.get(argument, "Unknown")
-    
-topicInName  = rospy.get_param('/semantic_segmentation/topicInName', '/imageUnknown')
-topicOutName = rospy.get_param('/semantic_segmentation/topicOutName', '/detImageUnknown')
-dirModelDescription = rospy.get_param('/semantic_segmentation/dirModelDescription', '/detImageUnknown')
-dirModelVaules = rospy.get_param('/semantic_segmentation/dirModelVaules', '/notDefined')
-dirTestImage = rospy.get_param('/semantic_segmentation/dirTestImage', '/notDefined')
-dirRemapping = rospy.get_param('/semantic_segmentation/dirRemapping', '/notDefined')
-#objectTypeInt = rospy.get_param('/semantic_segmentation/objectTypeInt', 1000) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+
+
+rospy.init_node('SemanticSegmentation', anonymous=True)
+nodeName = rospy.get_name()
+topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
+topicOutName = rospy.get_param(nodeName+'/topicOutName', '/detImageUnknown')
+dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
+dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
+dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
+dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
+imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
+imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
+
+# RETURNS launch parameters specifying if an object is set as an output 
 objectType =  np.array([False, False, False, False, False, False, False, False, False, False, False])
-objectType[0] = rospy.get_param('/semantic_segmentation/objectTypeUnknown', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[1] = rospy.get_param('/semantic_segmentation/objectTypeAnimal', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[2] = rospy.get_param('/semantic_segmentation/objectTypeBuilding', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[3] = rospy.get_param('/semantic_segmentation/objectTypeField', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[4] = rospy.get_param('/semantic_segmentation/objectTypeGround', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[5] = rospy.get_param('/semantic_segmentation/objectTypeObstacle', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[6] = rospy.get_param('/semantic_segmentation/objectTypePerson', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[7] = rospy.get_param('/semantic_segmentation/objectTypeShelterbelt', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[8] = rospy.get_param('/semantic_segmentation/objectTypeSky', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[9] = rospy.get_param('/semantic_segmentation/objectTypeVehicle', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
-objectType[10] = rospy.get_param('/semantic_segmentation/objectTypeWater', False) # 1000 is not specified. 0-19 is pascal classes. 20 is the pedestrian detector
+for iObj in range(0,len(objectType)):
+    objectType[iObj] = rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj+20), False)     
 
-
-
-imgDimWidth   = rospy.get_param('/semantic_segmentation/imgDimWidth', 800)
-imgDimHeight  = rospy.get_param('/semantic_segmentation/imgDimHeight', 600)
+#objectType[1] = rospy.get_param(nodeName+'/objectTypeAnimal', False) # 
+#objectType[2] = rospy.get_param(nodeName+'/objectTypeBuilding', False) # 
+#objectType[3] = rospy.get_param(nodeName+'/objectTypeField', False) # 
+#objectType[4] = rospy.get_param(nodeName+'/objectTypeGround', False) # 
+#objectType[5] = rospy.get_param(nodeName+'/objectTypeObstacle', False) #
+#objectType[6] = rospy.get_param(nodeName+'/objectTypePerson', False) # 
+#objectType[7] = rospy.get_param(nodeName+'/objectTypeShelterbelt', False) #
+#objectType[8] = rospy.get_param(nodeName+'/objectTypeSky', False) # 
+#objectType[9] = rospy.get_param(nodeName+'/objectTypeVehicle', False) # 
+#objectType[10] = rospy.get_param(nodeName+'/objectTypeWater', False) # 
 
 print "dirRemapping:", dirRemapping
 
@@ -153,7 +157,7 @@ def main():
     
     #print(topicInName)
     #global soundhandle
-    rospy.init_node('SemanticSegmentation', anonymous=True)
+    
     
     rospy.Subscriber(topicInName, msgImage, callbackImage_received)    
     #rospy.Timer(rospy.Duration(timeBetweenEvaluation), EvaluateHumanAwareness)

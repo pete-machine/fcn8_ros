@@ -1,17 +1,17 @@
 <launch>
 	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="semantic_segmentation" respawn="true" output="screen">
 		<param name="topicInName" value="/Logitech_webcam/image_raw" />
-		<param name="objectTypeUnknown" value="True" />
-		<param name="objectTypeAnimal" value="True" />
-		<param name="objectTypeBuilding" value="True" />
-		<param name="objectTypeField" value="True" />
-		<param name="objectTypeGround" value="True" />
-		<param name="objectTypeObstacle" value="True" />
-		<param name="objectTypePerson" value="True" />
-		<param name="objectTypeShelterbelt" value="True" />
-		<param name="objectTypeSky" value="True" />
-		<param name="objectTypeVehicle" value="True" />
-		<param name="objectTypeWater" value="True" />
+		<param name="objectType_SS_unknown" value="True" />
+		<param name="objectType_SS_animal" value="True" />
+		<param name="objectType_SS_building" value="True" />
+		<param name="objectType_SS_field" value="True" />
+		<param name="objectType_SS_ground" value="True" />
+		<param name="objectType_SS_obstacle" value="True" />
+		<param name="objectType_SS_person" value="True" />
+		<param name="objectType_SS_shelterbelt" value="True" />
+		<param name="objectType_SS_sky" value="True" />
+		<param name="objectType_SS_vehicle" value="True" />
+		<param name="objectType_SS_water" value="True" />
 		<!-- Select and object type (0-19 is YOLO darknet_ros, 31 is a pedestrian detector)  20. SS_unknown upto 30. SS_water  -->
 		<param name="imgDimWidth" value="400" />
 		<param name="imgDimHeight" value="300" />
