@@ -22,76 +22,52 @@ from functionsSegmanticSegmentation import initCaffeSS, predictImageSS
 
 def numbers_to_strings(argument):
     switcher = {
-        0: "YoloAeroplane",
-        1: "YoloBicycle",
-        2: "YoloBird",
-        3: "YoloBoat",
-        4: "YoloBottle",
-        5: "YoloBus",
-        6: "YoloCar",
-        7: "YoloCat",
-        8: "YoloChair",
-        9: "YoloCow",
-        10: "YoloDiningtable",
-        11: "YoloDog",
-        12: "YoloHorse",
-        13: "YoloMotorbike",
-        14: "YoloPerson",
-        15: "YoloPottedplant",
-        16: "YoloSheep",
-        17: "YoloSofa",
-        18: "YoloTrain",
-        19: "YoloTvMonitor",
-        20: "SS_unknown",
-        21: "SS_animal",
-        22: "SS_building",
-        23: "SS_field",
-        24: "SS_ground",
-        25: "SS_obstacle",
-        26: "SS_person",
-        27: "SS_shelterbelt",
-        28: "SS_sky",
-        29: "SS_vehicle",
-        30: "SS_water",
-        31: "PD_Pedestrian",
-        32: "thermal",
+#        0: "SS_unknown",        # 0
+#        1: "SS_animal",         # 0
+#        2: "SS_building",       # 0  
+#        3: "SS_field",          # 1
+#        4: "SS_ground",         # 2
+#        5: "SS_obstacle",       # 0
+#        6: "SS_person",         # 3
+#        7: "SS_shelterbelt",    # 4
+#        8: "SS_sky",            # 0
+#        9: "SS_vehicle",        # 5
+#        10: "SS_water",         # 6
+        0: "unknown",
+        1: "grass",
+        2: "ground",
+        3: "human",
+        4: "shelterbelt",
+        5: "vehicle",
+        6: "water",
     }
     return switcher.get(argument, "Unknown")
 
-
+secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
 rospy.init_node('SemanticSegmentation', anonymous=True)
 nodeName = rospy.get_name()
 topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
-topicOutName = rospy.get_param(nodeName+'/topicOutName', '/detImageUnknown')
+topicOutNameShowResult = rospy.get_param(nodeName+'/topicOutNameShowResult', nodeName+'/imageSS')
 dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
+gpuDevice = rospy.get_param(nodeName+'/gpuDevice', -1) # -1 is cpu, 0-3 is gpu 1-4
 dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
 dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
 dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
 imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
 imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
 
+pubImage = rospy.Publisher(topicOutNameShowResult, msgImage , queue_size=1)
 # RETURNS launch parameters specifying if an object is set as an output 
-objectType =  np.array([False, False, False, False, False, False, False, False, False, False, False])
-for iObj in range(0,len(objectType)):
-    objectType[iObj] = rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj+20), False)     
-
-#objectType[1] = rospy.get_param(nodeName+'/objectTypeAnimal', False) # 
-#objectType[2] = rospy.get_param(nodeName+'/objectTypeBuilding', False) # 
-#objectType[3] = rospy.get_param(nodeName+'/objectTypeField', False) # 
-#objectType[4] = rospy.get_param(nodeName+'/objectTypeGround', False) # 
-#objectType[5] = rospy.get_param(nodeName+'/objectTypeObstacle', False) #
-#objectType[6] = rospy.get_param(nodeName+'/objectTypePerson', False) # 
-#objectType[7] = rospy.get_param(nodeName+'/objectTypeShelterbelt', False) #
-#objectType[8] = rospy.get_param(nodeName+'/objectTypeSky', False) # 
-#objectType[9] = rospy.get_param(nodeName+'/objectTypeVehicle', False) # 
-#objectType[10] = rospy.get_param(nodeName+'/objectTypeWater', False) # 
+objectType =  list()
+for iObj in range(0,len(np.unique(secondRemapping))):
+    objectType.append(rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj), False))
 
 print "dirRemapping:", dirRemapping
-
+strParts = topicInName.split('/')
 pubImageObjs = list() 
 for iType in range(0,len(objectType)):
-    topicOutName = '/detectionImage' + numbers_to_strings(iType+20)
-    pubImageObjs.append(rospy.Publisher(topicOutName, msgImage , queue_size=1))
+    topicOutName = '/det/' + strParts[1] + '/' + nodeName + '/' + numbers_to_strings(iType)
+    pubImageObjs.append(rospy.Publisher(topicOutName, msgImage , queue_size=10))
 
 #print topicOutName
 
@@ -104,47 +80,39 @@ dirArchi = dirModelDescription
 #dirRemapping = "../remappingObjectTypes.mat"
 net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
 
+# MAKE NEW REMAPING
+classRemappingNew = -1*np.ones(classRemapping.shape)
+for iObj in range(0,len(np.unique(secondRemapping))):
+    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
+    classRemappingNew[test] = iObj
+    
 #image_message = bridge.cv2_to_imgmsg(predictionRemappedProbability, encoding="mono8")
 #plt.matshow(predictionRemapped)
 #plt.matshow(predictionRemappedProbability)
 
-
 def callbackImage_received(data):
-    #blank_image = np.zeros((imgDimHeight,imgDimWidth,1), np.uint8)
+#    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
     
-    #t1 = time.clock()
-    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
-    
-    #t2 = time.clock()
+    cv_image = np.array(im)
     cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
-    print "ImageReceived! Image dim: ", cv_image.shape
-    #t3 = time.clock()
-    #print "ImageShape: ",  cv_image.shape
-    out,maxValues = predictImageSS(net,cv_image,classRemapping)
+#    print "ImageReceived! Image dim: ", cv_image.shape
     
+    out,maxValues = predictImageSS(net,cv_image,gpuDevice)    
+    msgImage_SSResult = bridge.cv2_to_imgmsg(cv2.applyColorMap(np.uint8(out*255/59), cv2.COLORMAP_JET), encoding="rgb8")
     
+    pubImage.publish(msgImage_SSResult)
     for iType in range(0,len(objectType)):
         if(objectType[iType]==True):
+            
             predictionRemappedProbability = np.zeros(out.shape)
-            test = np.in1d(out, np.array(np.argwhere(classRemapping==objectType)))
+            test = np.in1d(out, np.array(np.argwhere(classRemappingNew==iType)))
             predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
             predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
-            #t4 = time.clock()
             image_message = bridge.cv2_to_imgmsg(np.uint8(predictionRemappedProbability*255), encoding="mono8")
-            #t5 = time.clock()
+            image_message.header.frame_id = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
             pubImageObjs[iType].publish(image_message)
-            #t6 = time.clock()
-    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
-    
-    #redictionRemappedProbability = cv_image 
-    #print predictionRemappedProbability
-    
-#    print "Image processed in: ", time.clock()-t1, "s"
-#    print "     bridge  in: ", t2-t1, "s"
-#    print "     resize image: ", t3-t2, "s"
-#    print "     forward pass (in predictImageSS): ", t4-t3, "s"
-#    print "     bridge out: ", t5-t4, "s"
-#    print "     publish: ", t6-t5, "s"
+            #print image_message.header.frame_id
+
 
 
 
@@ -153,16 +121,16 @@ def main():
     print ''
     for iType in range(0,len(objectType)):
         if(objectType[iType]==True):
-            print 'SemanticSegmentation  publishing:"', '/detectionImage' + numbers_to_strings(iType+20), ', receiving:"', topicInName
+            print 'SemanticSegmentation  publishing:"', '/det/' + strParts[1]  + nodeName + '/' + numbers_to_strings(iType), ', receiving:"', topicInName
     
     #print(topicInName)
     #global soundhandle
     
     
-    rospy.Subscriber(topicInName, msgImage, callbackImage_received)    
+    rospy.Subscriber(topicInName, msgImage, callbackImage_received,queue_size=None)    
     #rospy.Timer(rospy.Duration(timeBetweenEvaluation), EvaluateHumanAwareness)
     rospy.spin()
-
+    rospy.Subscriber()
 
 if __name__ == '__main__':
     main()

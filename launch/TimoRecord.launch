@@ -1,0 +1,36 @@
+<launch>	
+	<!-- Semantic Segmentation node  -->
+	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="semantic_segmentation" respawn="true" output="screen">
+		<param name="topic_name" value="/Logitech_webcam/image_raw" />
+		<param name="objectType_unknown" value="True" />
+		<param name="objectType_grass" value="True" />
+		<param name="objectType_ground" value="True" />
+		<param name="objectType_human" value="True" />
+		<param name="objectType_shelterbelt" value="True" />
+		<param name="objectType_vehicle" value="True" />
+		<param name="objectType_water" value="True" />
+		<param name="imgDimWidth" value="400" />
+		<param name="imgDimHeight" value="300" />
+		<param name="gpuDevice" value="1" /> <!-- Select GPU device, negative values selects cpu -->
+		<param name="dirModelDescription" value="$(find semantic_segmentation)/models/fcn-8s-pascal-deploy.prototxt" />
+		<param name="dirModelVaules" value="$(find semantic_segmentation)/models/fcn-8s-pascalcontext.caffemodel" />
+		<param name="dirTestImage" value="$(find semantic_segmentation)/src/Street2.jpg" />
+		<param name="dirRemapping" value="$(find semantic_segmentation)/remappingObjectTypes.mat" />
+	</node>
+
+	<!-- Makes viewing node for showing detected pedestrians -->
+	<node name="image_view_SEMANTICSEGMENTATION" pkg="image_view" type="image_view" respawn="false" output="screen">
+			<remap from="image" to="/semantic_segmentation/imageSS"/>
+			<param name="autosize" value="false" />
+	</node>
+
+	<!-- Uncompressing logitech cam -->
+	<node name="republish" pkg="image_transport" type="republish" args="compressed in:=/Logitech_webcam/image_raw _image_transport:=compressed raw out:=/Logitech_webcam/image_raw" respawn="false" output="screen">
+	</node> 
+
+	<!-- Makes viewing node for showing detected pedestrians -->
+	<node name="image_view_WEBCAM" pkg="image_view" type="image_view" respawn="false" output="screen">
+			<remap from="image" to="/Logitech_webcam/image_raw"/>
+			<param name="autosize" value="false" />
+	</node>
+</launch>
