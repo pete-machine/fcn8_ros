@@ -42,6 +42,7 @@ def numbers_to_strings(argument):
         6: "water",
     }
     return switcher.get(argument, "Unknown")
+<<<<<<< HEAD
 
 secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
 rospy.init_node('SemanticSegmentation', anonymous=True)
@@ -62,6 +63,28 @@ objectType =  list()
 for iObj in range(0,len(np.unique(secondRemapping))):
     objectType.append(rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj), False))
 
+=======
+secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+rospy.init_node('SemanticSegmentation', anonymous=True)
+nodeName = rospy.get_name()
+topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
+topicOutNameShowResult = rospy.get_param(nodeName+'/topicOutNameShowResult', nodeName+'/imageSS')
+dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
+gpuDevice = rospy.get_param(nodeName+'/gpuDevice', -1) # -1 is cpu, 0-3 is gpu 1-4
+dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
+dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
+dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
+imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
+imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
+
+
+pubImage = rospy.Publisher(topicOutNameShowResult, msgImage , queue_size=1)
+# RETURNS launch parameters specifying if an object is set as an output 
+objectType =  list()
+for iObj in range(0,len(np.unique(secondRemapping))):
+    objectType.append(rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj), False))
+
+>>>>>>> 6d52ccb77b1de4e8159b8a2d1e3dddb095a33bfa
 print "dirRemapping:", dirRemapping
 strParts = topicInName.split('/')
 pubImageObjs = list() 
@@ -91,9 +114,15 @@ for iObj in range(0,len(np.unique(secondRemapping))):
 #plt.matshow(predictionRemappedProbability)
 
 def callbackImage_received(data):
+<<<<<<< HEAD
 #    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
     
     cv_image = np.array(im)
+=======
+    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
+    
+#    cv_image = np.array(im)
+>>>>>>> 6d52ccb77b1de4e8159b8a2d1e3dddb095a33bfa
     cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
 #    print "ImageReceived! Image dim: ", cv_image.shape
     
@@ -103,6 +132,7 @@ def callbackImage_received(data):
     pubImage.publish(msgImage_SSResult)
     for iType in range(0,len(objectType)):
         if(objectType[iType]==True):
+            
             predictionRemappedProbability = np.zeros(out.shape)
             test = np.in1d(out, np.array(np.argwhere(classRemappingNew==iType)))
             predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes

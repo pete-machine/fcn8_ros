@@ -42,7 +42,6 @@ def numbers_to_strings(argument):
         6: "water",
     }
     return switcher.get(argument, "Unknown")
-
 secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
 rospy.init_node('SemanticSegmentation', anonymous=True)
 nodeName = rospy.get_name()
@@ -55,6 +54,7 @@ dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
 dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
 imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
 imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
+
 
 pubImage = rospy.Publisher(topicOutNameShowResult, msgImage , queue_size=1)
 # RETURNS launch parameters specifying if an object is set as an output 
@@ -91,9 +91,9 @@ for iObj in range(0,len(np.unique(secondRemapping))):
 #plt.matshow(predictionRemappedProbability)
 
 def callbackImage_received(data):
-#    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
+    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
     
-    cv_image = np.array(im)
+#    cv_image = np.array(im)
     cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
     print "ImageReceived! Image dim: ", cv_image.shape
     

@@ -45,7 +45,10 @@ def predictImageSS(net,im,gpuDevice):
     # run net and take argmax for prediction
     if(gpuDevice>=0):
         caffe.set_mode_gpu()
-        caffe.set_device(2)
+        caffe.set_device(gpuDevice)
+    else:
+        # load net
+        caffe.set_mode_cpu()
         
     #t1 = time.clock();
     net.forward()
