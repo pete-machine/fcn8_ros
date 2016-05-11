@@ -53,8 +53,11 @@ def predictImageSS(net,im,gpuDevice):
 
 
     #t1 = time.clock();
-    out = net.blobs['score-final'].data[0].argmax(axis=0)
-    maxValues = net.blobs['score-final'].data[0].max(axis=0)
+    outputMatrix = net.blobs['score-final'].data[0]
+    out = outputMatrix.argmax(axis=0)
+    #maxValues = 
+    outExp = np.exp(outputMatrix)
+    maxValues = outExp.max(axis=0)/outExp.sum(axis=0) 
     return out,maxValues
 #    maxValues = net.blobs['score-final'].data[0].max(axis=0)
 #    for iType in range(0,len(objectType)):

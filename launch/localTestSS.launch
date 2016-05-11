@@ -52,7 +52,7 @@
 	</node>
 
 
-<!-- Showing image detection for each object class 
+<!-- Showing image detection for each object class -->
 	<node name="image_view0" pkg="image_view" type="image_view" respawn="false" output="screen">
 			<remap from="image" to="/det/usb_cam/semantic_segmentation/grass"/>
 			<param name="autosize" value="false" />
@@ -88,5 +88,5 @@
 			<param name="autosize" value="false" />
 			<param name="window_name" value="water" />
 	</node>
--->
+
 </launch>
