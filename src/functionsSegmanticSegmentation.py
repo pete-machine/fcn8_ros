@@ -72,22 +72,23 @@ def predictImageSS(net,im,gpuDevice):
 #    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
 #    return predictionRemappedProbability
 
+
 ##im = Image.open('/home/repete/blank_ws/src/semantic_segmentation/src/Street2.jpg')
-im_gray = cv2.imread("/home/repete/blank_ws/src/semantic_segmentation/src/Street2.jpg", cv2.IMREAD_GRAYSCALE)
+im_gray = cv2.imread("/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/src/Street2.jpg", cv2.IMREAD_GRAYSCALE)
 im_color = cv2.applyColorMap(im_gray, cv2.COLORMAP_JET)
-#dirArchi = '/home/repete/blank_ws/src/semantic_segmentation/models/fcn-8s-pascal-deploy.prototxt'
-#dirModel = '/home/repete/blank_ws/src/semantic_segmentation/models/fcn-8s-pascalcontext.caffemodel'
-#dirRemapping = "/home/repete/Code/PascalContext/MATLAB/remappingObjectTypes.mat"
-#objectType = 8
-#net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
-#
-#secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
-#classRemappingNew = -1*np.ones(classRemapping.shape)
-#for iObj in range(0,len(np.unique(secondRemapping))):
-#    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
-#    classRemappingNew[test] = iObj
-#predictionRemapped, predictionRemappedProbability = predictImageSS(net,im,objectType,classRemapping)
-#plt.matshow(predictionRemapped)
-#plt.matshow(predictionRemappedProbability)
-#plt.matshow(np.array(im_color))
+dirArchi = '/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/models/fcn-8s-pascal-deploy.prototxt'
+dirModel = '/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/models/fcn-8s-pascalcontext.caffemodel'
+dirRemapping = "/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/remappingObjectTypes.mat"
+objectType = 8
+net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
+
+secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+classRemappingNew = -1*np.ones(classRemapping.shape)
+for iObj in range(0,len(np.unique(secondRemapping))):
+    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
+    classRemappingNew[test] = iObj
+predictionRemapped, predictionRemappedProbability = predictImageSS(net,im,objectType,classRemapping)
+plt.matshow(predictionRemapped)
+plt.matshow(predictionRemappedProbability)
+plt.matshow(np.array(im_color))
 
