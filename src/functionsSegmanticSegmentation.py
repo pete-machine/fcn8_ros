@@ -56,7 +56,7 @@ def predictImageSS(net,im,gpuDevice):
 
 
     #t1 = time.clock();
-    outputMatrix = net.blobs['score-final'].data[0]
+    outputMatrix = net.blobs['score'].data[0]
     out = outputMatrix.argmax(axis=0)
     #maxValues = 
     outExp = np.exp(outputMatrix)
@@ -73,22 +73,24 @@ def predictImageSS(net,im,gpuDevice):
 #    return predictionRemappedProbability
 
 
-##im = Image.open('/home/repete/blank_ws/src/semantic_segmentation/src/Street2.jpg')
-im_gray = cv2.imread("/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/src/Street2.jpg", cv2.IMREAD_GRAYSCALE)
-im_color = cv2.applyColorMap(im_gray, cv2.COLORMAP_JET)
-dirArchi = '/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/models/fcn-8s-pascal-deploy.prototxt'
-dirModel = '/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/models/fcn-8s-pascalcontext.caffemodel'
-dirRemapping = "/home/repete/Code/ros_workspace/src/RosSemanticSegmentation/remappingObjectTypes.mat"
+im = Image.open('/home/repete/Code/ros_workspace/src/fcn8_ros/src/Street2.jpg')
+#im_gray = cv2.imread("/home/repete/Code/ros_workspace/src/fcn8_ros/src/Street2.jpg", cv2.IMREAD_GRAYSCALE)
+#im_color = cv2.applyColorMap(im_gray, cv2.COLORMAP_JET)
+#dirArchi = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/fcn-8s-pascal-deploy.prototxt'
+dirArchi = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/deploy.prototxt'
+#dirModel = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/fcn-8s-pascalcontext.caffemodel'
+dirModel = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/pascalcontext-fcn8s-heavy.caffemodel'
+dirRemapping = "/home/repete/Code/ros_workspace/src/fcn8_ros/remappingObjectTypes.mat"
 objectType = 8
 net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
 
-secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
-classRemappingNew = -1*np.ones(classRemapping.shape)
-for iObj in range(0,len(np.unique(secondRemapping))):
-    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
-    classRemappingNew[test] = iObj
-predictionRemapped, predictionRemappedProbability = predictImageSS(net,im,objectType,classRemapping)
+#secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+#classRemappingNew = -1*np.ones(classRemapping.shape)
+#for iObj in range(0,len(np.unique(secondRemapping))):
+#    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
+#    classRemappingNew[test] = iObj
+predictionRemapped, predictionRemappedProbability = predictImageSS(net,im,-1)
 plt.matshow(predictionRemapped)
 plt.matshow(predictionRemappedProbability)
-plt.matshow(np.array(im_color))
+#plt.matshow(np.array(im_color))
 

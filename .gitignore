@@ -50,3 +50,4 @@ Thumbs.db
 *.caffemodel
 *.launch~
 *.xml~
+models/backup/

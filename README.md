@@ -37,28 +37,15 @@ Install caffe dependencies
 	pip install protobuf
 	//apt-get install python-opencv
 
-You may either select original caffe version from Berkeley (__Caffe (Berkeley)__) or nvidias edition (__Caffe (nvidia)__)
 
-#### Caffe (Berkeley)
+#### Caffe 
 Get nvidias edition of caffe and git clone it to ~/Code/
 
 	cd && mkdir Code && cd Code 
-	git clone https://github.com/BVLC/caffe.git
 
-Make a copy of Makefile.config.example
-	
-	cd ~/Code/caffe
-	cp Makefile.config.example Makefile.config
-
-Include the following lines in the Makefile.config (Only if GPU is used)
-
-	USE_CUDNN := 1
-
-#### Caffe (nvidia)
-Get nvidias edition of caffe and git clone it to ~/Code/
-
-	cd && mkdir Code && cd Code 
-	git clone https://github.com/NVIDIA/caffe.git
+You may either select original caffe version from Berkeley (__Caffe (Berkeley)__) or nvidias edition (__Caffe (nvidia)__).
+	git clone https://github.com/BVLC/caffe.git # Caffe (Berkeley)
+	git clone https://github.com/NVIDIA/caffe.git  # Caffe (nvidia)
 
 In Makefile replace LIBRARIES line (around 183) with 
 
@@ -69,16 +56,17 @@ Make a copy of Makefile.config.example
 	cd ~/Code/caffe
 	cp Makefile.config.example Makefile.config
 
-Add /usr/include/hdf5/serial/ to INCLUDE_DIRS (around line 96)
+Add /usr/include/hdf5/serial/ to INCLUDE_DIRS (around line 94-96)
 
 	INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial/
 
-Include the following lines in the Makefile.config (Only if GPU is used)
-
-	USE_CUDNN := 1
-
 
 #### Same for both Caffe (nvidia) and Caffe (berkeley)
+
+Include the following lines in the Makefile.config 
+
+	USE_CUDNN := 1 	(Only if GPU is used)
+	WITH_PYTHON_LAYER := 1
 
 RESTART computer before building caffe
 	sudo reboot now
@@ -91,6 +79,8 @@ Build caffe
 	make runtest -j8
 	make pycaffe
 
+	One-liner
+	make all -j8 && make test -j8 && make runtest -j8 && make pycaffe
 
 Append the following lines to ~/.bashrc
 
