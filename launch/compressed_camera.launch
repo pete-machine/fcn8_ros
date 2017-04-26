@@ -1,5 +1,7 @@
 <launch>
-	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="semantic_segmentation" respawn="true" output="screen">
+	
+
+	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="fcn8_ros" respawn="true" output="screen">
 		<param name="topicInName" value="/Logitech_webcam/image_raw" />
 		<param name="objectType_SS_unknown" value="True" />
 		<param name="objectType_SS_animal" value="True" />
@@ -15,21 +17,26 @@
 		<!-- Select and object type (0-19 is YOLO darknet_ros, 31 is a pedestrian detector)  20. SS_unknown upto 30. SS_water  -->
 		<param name="imgDimWidth" value="400" />
 		<param name="imgDimHeight" value="300" />
-		<param name="dirModelDescription" value="$(find semantic_segmentation)/models/fcn-8s-pascal-deploy.prototxt" />
-		<param name="dirModelVaules" value="$(find semantic_segmentation)/models/fcn-8s-pascalcontext.caffemodel" />
-		<param name="dirTestImage" value="$(find semantic_segmentation)/src/Street2.jpg" />
-		<param name="dirRemapping" value="$(find semantic_segmentation)/remappingObjectTypes.mat" />
+		<param name="dirModelDescription" value="$(find fcn8_ros)/models/deploy.prototxt" />
+		<param name="dirModelVaules" value="$(find fcn8_ros)/models/pascalcontext-fcn8s-heavy.caffemodel" />
+		<param name="dirTestImage" value="$(find fcn8_ros)/src/Street2.jpg" />
+		<param name="dirRemapping" value="$(find fcn8_ros)/remappingObjectTypes.mat" />
 	</node>
 
 
 	<node name="republish" pkg="image_transport" type="republish" args="compressed in:=/Logitech_webcam/image_raw _image_transport:=compressed raw out:=/Logitech_webcam/image_raw" respawn="false" output="screen">
 	</node> 
+
+	<node name="image_raw" pkg="image_view" type="image_view" respawn="false" output="screen">
+		<remap from="image" to="/Logitech_webcam/image_raw"/>
+		<param name="autosize" value="false" />
+	</node>
 	
 	<node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
-		<remap from="image" to="/detectionImageSS_person"/>
+		<remap from="image" to="det/Logitech_webcam/semantic_segmentation/human"/>
 		 <param name="autosize" value="false" />
 	</node>
-
+<!--
 	<node type="image2ism.py" name="image2ism" pkg="image_inverse_sensor_model" respawn="true" output="screen">
 		<param name="objectTypeInt" value="26" />
 		<param name="imageWidth" value="400" />
@@ -44,4 +51,5 @@
 		<param name="grid_xSizeInM" value="-1.0" />
 		<param name="grid_ySizeInM" value="-1.0" />
 	</node>
+-->
 </launch>

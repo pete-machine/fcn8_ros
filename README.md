@@ -17,6 +17,7 @@ Get the newest driver with the “Software & Updates” application in the “Ad
 #### CUDA 8.0 (Only if GPU is used)
 Software requires CUDA to be installed. 
 Go to [download page](https://developer.nvidia.com/cuda-downloads) select your platform, download and follow instructions.
+In Select Target Platform i used Linux/x86_64/16.04/deb (local)
 
 #### cuDNN 6.0 (Only if GPU is used)
 (You will need a nvidia user) 

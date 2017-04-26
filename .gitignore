@@ -51,3 +51,4 @@ Thumbs.db
 *.launch~
 *.xml~
 models/backup/
+launch/backup/
