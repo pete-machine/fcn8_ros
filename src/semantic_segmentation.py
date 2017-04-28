@@ -79,7 +79,7 @@ dirModel = dirModelVaules
 dirArchi = dirModelDescription
 #dirRemapping = "../remappingObjectTypes.mat"
 net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
-
+inProcessing = False
 # MAKE NEW REMAPING
 classRemappingNew = -1*np.ones(classRemapping.shape)
 for iObj in range(0,len(np.unique(secondRemapping))):
@@ -91,30 +91,32 @@ for iObj in range(0,len(np.unique(secondRemapping))):
 #plt.matshow(predictionRemappedProbability)
 
 def callbackImage_received(data):
-    cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
+    global inProcessing
+    if(inProcessing==False): 
+        inProcessing = True
+        cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
     
 #    cv_image = np.array(im)
-    cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
-    print "ImageReceived! Image dim: ", cv_image.shape
+        cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
+        print "ImageReceived! Image dim: ", cv_image.shape
     
-    out,maxValues = predictImageSS(net,cv_image,gpuDevice)    
-    msgImage_SSResult = bridge.cv2_to_imgmsg(cv2.applyColorMap(np.uint8(out*255/59), cv2.COLORMAP_JET), encoding="rgb8")
+        out,maxValues = predictImageSS(net,cv_image,gpuDevice)  
+#        print "Image predicted: out.shape", out.shape, "maxValues.shape",maxValues.shape
+        msgImage_SSResult = bridge.cv2_to_imgmsg(cv2.applyColorMap(np.uint8(out*255/59), cv2.COLORMAP_JET), encoding="rgb8")
     
-    pubImage.publish(msgImage_SSResult)
-    for iType in range(0,len(objectType)):
-        if(objectType[iType]==True):
-            predictionRemappedProbability = np.zeros(out.shape)
-            test = np.in1d(out, np.array(np.argwhere(classRemappingNew==iType)))
-            predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
-            predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
-            occMap = np.uint8(predictionRemappedProbability*255)
-            #print np.min(np.min(maxValues)), np.max(maxValues)
-            #print np.min(np.min(predictionRemappedProbability)), np.max(predictionRemappedProbability)
-            #print np.min(np.min(occMap)), np.max(occMap)
-            image_message = bridge.cv2_to_imgmsg(occMap, encoding="mono8")
-            image_message.header.frame_id = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
-            pubImageObjs[iType].publish(image_message)
-            #print image_message.header.frame_id
+        pubImage.publish(msgImage_SSResult)
+        for iType in range(0,len(objectType)):
+            if(objectType[iType]==True):
+                predictionRemappedProbability = np.zeros(out.shape)
+                test = np.in1d(out, np.array(np.argwhere(classRemappingNew==iType)))
+                predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
+                predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
+                occMap = np.uint8(predictionRemappedProbability*255)
+                image_message = bridge.cv2_to_imgmsg(occMap, encoding="mono8")
+                image_message.header.frame_id = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
+                pubImageObjs[iType].publish(image_message)
+
+        inProcessing = False
 
 
 

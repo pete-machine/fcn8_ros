@@ -99,7 +99,7 @@ Git clone the package to your ros-workspace repository.
 
 Get weights. (Prototxt and caffemodel is from [here](https://github.com/shelhamer/fcn.berkeleyvision.org/tree/master/pascalcontext-fcn8s))
 	
-	cd <your_workspace>/src/fcn8_ros/
+	cd <your_workspace>/src/fcn8_ros/models/
 	wget http://dl.caffe.berkeleyvision.org/pascalcontext-fcn8s-heavy.caffemodel
 
 

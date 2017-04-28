@@ -7,17 +7,14 @@
 
 	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="fcn8_ros" respawn="true" output="screen">
 		<param name="topicInName" value="/Logitech_webcam/image_raw" />
-		<param name="objectType_SS_unknown" value="True" />
-		<param name="objectType_SS_animal" value="True" />
-		<param name="objectType_SS_building" value="True" />
-		<param name="objectType_SS_field" value="True" />
-		<param name="objectType_SS_ground" value="True" />
-		<param name="objectType_SS_obstacle" value="True" />
-		<param name="objectType_SS_person" value="True" />
-		<param name="objectType_SS_shelterbelt" value="True" />
-		<param name="objectType_SS_sky" value="True" />
-		<param name="objectType_SS_vehicle" value="True" />
-		<param name="objectType_SS_water" value="True" />
+		<param name="objectType_unknown" value="True" />
+		<param name="objectType_grass" value="True" />
+		<param name="objectType_ground" value="True" />
+		<param name="objectType_human" value="True" />
+		<param name="objectType_shelterbelt" value="True" />
+		<param name="objectType_vehicle" value="True" />
+		<param name="objectType_water" value="True" />
+
 		<!-- Select and object type (0-19 is YOLO darknet_ros, 31 is a pedestrian detector)  20. SS_unknown upto 30. SS_water  -->
 		<param name="imgDimWidth" value="400" />
 		<param name="imgDimHeight" value="300" />
