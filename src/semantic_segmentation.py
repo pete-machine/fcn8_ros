@@ -66,7 +66,7 @@ print "dirRemapping:", dirRemapping
 strParts = topicInName.split('/')
 pubImageObjs = list() 
 for iType in range(0,len(objectType)):
-    topicOutName = '/det/' + strParts[1] + '/' + nodeName + '/' + numbers_to_strings(iType)
+    topicOutName = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
     pubImageObjs.append(rospy.Publisher(topicOutName, msgImage , queue_size=10))
 
 #print topicOutName

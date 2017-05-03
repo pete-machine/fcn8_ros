@@ -1,9 +1,10 @@
 <launch>
-
+<!-- Show raw  
 	<node name="image_raw" pkg="image_view" type="image_view" respawn="false" output="screen">
 		<remap from="image" to="/Multisense/left/image_rect_color"/>
 		<param name="autosize" value="false" />
 	</node>
+-->
 
 	<!-- Semantic Segmentation node  -->
 	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="fcn8_ros" respawn="true" output="screen">
@@ -15,11 +16,11 @@
 		<param name="objectType_shelterbelt" value="True" />
 		<param name="objectType_vehicle" value="True" />
 		<param name="objectType_water" value="True" />
-		<param name="imgDimWidth" value="600" />
-		<param name="imgDimHeight" value="300" />
+		<param name="imgDimWidth" value="512" />
+		<param name="imgDimHeight" value="217" />
 
 		<!-- Select GPU device, negative values selects cpu -->
-		<param name="gpuDevice" value="-1" /> 
+		<param name="gpuDevice" value="3" /> 
 
 		<param name="dirModelDescription" value="$(find fcn8_ros)/models/deploy.prototxt" />
 		<param name="dirModelVaules" value="$(find fcn8_ros)/models/pascalcontext-fcn8s-heavy.caffemodel" />
@@ -27,17 +28,16 @@
 		<param name="dirRemapping" value="$(find fcn8_ros)/remappingObjectTypes.mat" />
 	</node>
 
+	
 
-	<!-- Show human  -->
+
+<!-- Show respectively unknown, grass, ground, shelterbelt, vehicle and water
+
 	<node name="image_processed_human" pkg="image_view" type="image_view" respawn="false" output="screen">
 		<remap from="image" to="det/Multisense/semantic_segmentation/human"/>
 		<param name="autosize" value="false" />
 		<param name="window_name" value="human" />
 	</node>
-
-
-<!-- Show respectively unknown, grass, ground, shelterbelt, vehicle and water
-
 	<node name="image_processed_unknown" pkg="image_view" type="image_view" respawn="false" output="screen">
 		<remap from="image" to="det/Multisense/semantic_segmentation/unknown"/>
 		<param name="autosize" value="false" />
