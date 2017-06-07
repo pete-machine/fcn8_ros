@@ -34,15 +34,17 @@ def numbers_to_strings(argument):
 #        9: "SS_vehicle",        # 5
 #        10: "SS_water",         # 6
         0: "unknown",
-        1: "grass",
-        2: "ground",
-        3: "human",
-        4: "shelterbelt",
-        5: "vehicle",
-        6: "water",
+        1: "other",
+        2: "building",
+        3: "grass",
+        4: "ground",
+        5: "human",
+        6: "shelterbelt",
+        7: "water",
     }
     return switcher.get(argument, "Unknown")
-secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+#secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+secondRemapping = np.array([1, 1, 2, 3, 4, 1, 5, 6, 0, 1, 8])
 rospy.init_node('SemanticSegmentation', anonymous=True)
 nodeName = rospy.get_name()
 topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
