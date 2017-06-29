@@ -10,6 +10,7 @@ import os
 import sys
 sys.path.append("/usr/lib/python2.7/dist-packages")
 from cv_bridge import CvBridge, CvBridgeError
+import time
 import cv2 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -81,7 +82,7 @@ imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
 
 if visualize:
     pubImage = rospy.Publisher(topicOutVisualize, msgImage , queue_size=1)
-pubDetectionImage = rospy.Publisher(os.path.join(outputTopicPrefix,'detectionImage'), ImageDetections , queue_size=10)
+pubDetectionImage = rospy.Publisher(os.path.join(outputTopicPrefix,'detection_image'), ImageDetections , queue_size=10)
 
 print "dirRemapping:", dirRemapping
 strParts = topicInName.split('/')
@@ -114,6 +115,7 @@ for iObj in range(0,len(np.unique(secondRemapping))):
 def callbackImage_received(data):
     global inProcessing
     if(inProcessing==False): 
+        t1 = time.time()
         inProcessing = True
         cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
     
@@ -143,7 +145,7 @@ def callbackImage_received(data):
                 className = numbers_to_strings(iType)
                 image_message = bridge.cv2_to_imgmsg(tmp, encoding="mono8")
                 image_message.header = data.header
-                image_message.header.frame_id = os.path.join(outputTopicPrefix) + className
+                image_message.header.frame_id = os.path.join(outputTopicPrefix,className)
                 #pubImageObjs[iType].publish(image_message)
                 pubImageObjs[className].publish(image_message)
         
@@ -151,7 +153,7 @@ def callbackImage_received(data):
         msg = ImageDetections()
         msg.header = data.header
         msg.imgConfidence = bridge.cv2_to_imgmsg(maxValues, encoding="mono8")
-        msg.imgClass = bridge.cv2_to_imgmsg(outRemapped, encoding="mono8")
+        msg.imgClass = bridge.cv2_to_imgmsg(outRemapped.astype(np.uint8), encoding="mono8")
         msg.crop = [0.0, 1.0, 0.0, 1.0]
         
         pubDetectionImage.publish(msg)
@@ -168,7 +170,7 @@ def callbackImage_received(data):
 #            image_message.header = data.header
 #            image_message.header.frame_id = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
 #            pubImageObjs[iType].publish(image_message)
-
+        print "ImageProcessed in: ", time.time()-t1, "s"
         inProcessing = False
 
 
@@ -177,9 +179,11 @@ def callbackImage_received(data):
 # main
 def main():
     print ''
-    for iType in range(0,len(objectType)):
-        if(objectType[iType]==True):
-            print 'SemanticSegmentation  publishing:"', '/det/' + strParts[1]  + nodeName + '/' + numbers_to_strings(iType), ', receiving:"', topicInName
+    for idx,iType in enumerate(classids):
+        if stuffType[idx] == True:
+            print 'SemanticSegmentation (forwarded to image2ism) publishing:"', os.path.join(outputTopicPrefix, numbers_to_strings(iType)), ', receiving:"', topicInName
+        else:
+            print 'SemanticSegmentation (forwarded to eventually bb2ism) publishing (' + numbers_to_strings(iType) + '):', os.path.join(outputTopicPrefix,'detectionImage'), ', receiving:"', topicInName
     
     #print(topicInName)
     #global soundhandle

@@ -3,17 +3,77 @@ import sys
 #cafferootss=os.environ["CAFFE_ROOTSS"]
 #os.environ["CAFFE_ROOT"] = cafferootss
 #os.environ["PYTHONPATH"]=os.path.join(cafferootss,'python')
-
-import sys
 sys.path.append("/usr/lib/python2.7/dist-packages")
-import cv2 
-
 import numpy as np
 import scipy.io as sio
-from PIL import Image
-import matplotlib.pyplot as plt
-import time
 import caffe
+ 
+#<<<<<<< HEAD
+#=======
+#import numpy as np
+##import matplotlib.pyplot as plt
+#from functionsSegmanticSegmentation import initCaffeSS, predictImageSS
+#
+#
+## 0.aeroplane, 1. bicycle, 2 bird, 3.boat, 4. bottle, 5. bus, 6. car, 7. cat, 8. chair, 9. cow, 10.diningtable
+## 11. dog, 12. horse, 13. motorbike, 14. person, 15. pottedplant, 16. sheep, 17. sofa, 18. train, 19. tvmonitor, 20. pedestrian
+## REMAPPING (agriculture classes)
+#
+#def numbers_to_strings(argument):
+#    switcher = {
+##        0: "SS_unknown",        # 0
+##        1: "SS_animal",         # 0
+##        2: "SS_building",       # 0  
+##        3: "SS_field",          # 1
+##        4: "SS_ground",         # 2
+##        5: "SS_obstacle",       # 0
+##        6: "SS_person",         # 3
+##        7: "SS_shelterbelt",    # 4
+##        8: "SS_sky",            # 0
+##        9: "SS_vehicle",        # 5
+##        10: "SS_water",         # 6
+#        0: "unknown",
+#        1: "other",
+#        2: "building",
+#        3: "grass",
+#        4: "ground",
+#        5: "human",
+#        6: "shelterbelt",
+#        7: "water",
+#    }
+#    return switcher.get(argument, "Unknown")
+##secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+#secondRemapping = np.array([1, 1, 2, 3, 4, 1, 5, 6, 0, 1, 8])
+#rospy.init_node('SemanticSegmentation', anonymous=True)
+#nodeName = rospy.get_name()
+#topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
+#topicOutNameShowResult = rospy.get_param(nodeName+'/topicOutNameShowResult', nodeName+'/imageSS')
+#dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
+#gpuDevice = rospy.get_param(nodeName+'/gpuDevice', -1) # -1 is cpu, 0-3 is gpu 1-4
+#dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
+#dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
+#dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
+#imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
+#imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
+#
+#
+#pubImage = rospy.Publisher(topicOutNameShowResult, msgImage , queue_size=1)
+## RETURNS launch parameters specifying if an object is set as an output 
+#objectType =  list()
+#for iObj in range(0,len(np.unique(secondRemapping))):
+#    objectType.append(rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj), False))
+#
+#print "dirRemapping:", dirRemapping
+#strParts = topicInName.split('/')
+#pubImageObjs = list() 
+#for iType in range(0,len(objectType)):
+#    topicOutName = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
+#    pubImageObjs.append(rospy.Publisher(topicOutName, msgImage , queue_size=10))
+#
+##print topicOutName
+#
+#bridge = CvBridge()
+#>>>>>>> da81e4bfedc49d71ba895f023b2ec434683ab925
 
 
 def initCaffeSS(dirArchi,dirModel,dirRemapping):

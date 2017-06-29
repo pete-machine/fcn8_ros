@@ -88,13 +88,12 @@ cv_image = cv2.cvtColor(cv2.imread(dirTestImage),cv2.COLOR_BGR2RGB)
 
 
 cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
+
+t1 = time.time()
 out,maxValues = predictImageSS(net,cv_image,gpuDevice)
 
 maxValues = np.uint8(maxValues*255)
 
-
-
-#t1 = time.time()
 
 # Define remapping using a interp1d function. NICE :D
 f = interp1d(np.arange(0,len(classRemappingNew)),classRemappingNew,kind='nearest')
