@@ -1,141 +1,96 @@
-#!/usr/bin/env python
+import os
+import sys
+#cafferootss=os.environ["CAFFE_ROOTSS"]
+#os.environ["CAFFE_ROOT"] = cafferootss
+#os.environ["PYTHONPATH"]=os.path.join(cafferootss,'python')
 
-import rospy
-#import time
-#from collections import namedtuple
-#from std_msgs.msg import Float64MultiArray
-#from std_msgs.msg import UInt16
-from sensor_msgs.msg import Image as msgImage
-from PIL import Image as ImagePil
 import sys
 sys.path.append("/usr/lib/python2.7/dist-packages")
-from cv_bridge import CvBridge, CvBridgeError
 import cv2 
+
 import numpy as np
-#import matplotlib.pyplot as plt
-from functionsSegmanticSegmentation import initCaffeSS, predictImageSS
+import scipy.io as sio
+from PIL import Image
+import matplotlib.pyplot as plt
+import time
+import caffe
 
 
-# 0.aeroplane, 1. bicycle, 2 bird, 3.boat, 4. bottle, 5. bus, 6. car, 7. cat, 8. chair, 9. cow, 10.diningtable
-# 11. dog, 12. horse, 13. motorbike, 14. person, 15. pottedplant, 16. sheep, 17. sofa, 18. train, 19. tvmonitor, 20. pedestrian
-# REMAPPING (agriculture classes)
-
-def numbers_to_strings(argument):
-    switcher = {
-#        0: "SS_unknown",        # 0
-#        1: "SS_animal",         # 0
-#        2: "SS_building",       # 0  
-#        3: "SS_field",          # 1
-#        4: "SS_ground",         # 2
-#        5: "SS_obstacle",       # 0
-#        6: "SS_person",         # 3
-#        7: "SS_shelterbelt",    # 4
-#        8: "SS_sky",            # 0
-#        9: "SS_vehicle",        # 5
-#        10: "SS_water",         # 6
-        0: "unknown",
-        1: "grass",
-        2: "ground",
-        3: "human",
-        4: "shelterbelt",
-        5: "vehicle",
-        6: "water",
-    }
-    return switcher.get(argument, "Unknown")
-secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
-rospy.init_node('SemanticSegmentation', anonymous=True)
-nodeName = rospy.get_name()
-topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
-topicOutNameShowResult = rospy.get_param(nodeName+'/topicOutNameShowResult', nodeName+'/imageSS')
-dirModelDescription = rospy.get_param(nodeName+'/dirModelDescription', '/detImageUnknown')
-gpuDevice = rospy.get_param(nodeName+'/gpuDevice', -1) # -1 is cpu, 0-3 is gpu 1-4
-dirModelVaules = rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
-dirTestImage = rospy.get_param(nodeName+'/dirTestImage', '/notDefined')
-dirRemapping = rospy.get_param(nodeName+'/dirRemapping', '/notDefined')
-imgDimWidth   = rospy.get_param(nodeName+'/imgDimWidth', 800)
-imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
-
-
-pubImage = rospy.Publisher(topicOutNameShowResult, msgImage , queue_size=1)
-# RETURNS launch parameters specifying if an object is set as an output 
-objectType =  list()
-for iObj in range(0,len(np.unique(secondRemapping))):
-    objectType.append(rospy.get_param(nodeName+'/objectType_'+numbers_to_strings(iObj), False))
-
-print "dirRemapping:", dirRemapping
-strParts = topicInName.split('/')
-pubImageObjs = list() 
-for iType in range(0,len(objectType)):
-    topicOutName = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
-    pubImageObjs.append(rospy.Publisher(topicOutName, msgImage , queue_size=10))
-
-#print topicOutName
-
-bridge = CvBridge()
-
-
-im = ImagePil.open(dirTestImage)
-dirModel = dirModelVaules
-dirArchi = dirModelDescription
-#dirRemapping = "../remappingObjectTypes.mat"
-net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
-inProcessing = False
-# MAKE NEW REMAPING
-classRemappingNew = -1*np.ones(classRemapping.shape)
-for iObj in range(0,len(np.unique(secondRemapping))):
-    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
-    classRemappingNew[test] = iObj
+def initCaffeSS(dirArchi,dirModel,dirRemapping):
+    test = sio.loadmat(dirRemapping)
+    classRemapping = np.concatenate((np.array([0]),np.array(test['newSorting'][:,1])),axis=0)
     
-#image_message = bridge.cv2_to_imgmsg(predictionRemappedProbability, encoding="mono8")
+    # load net
+    caffe.set_mode_cpu()
+    
+    net = caffe.Net(dirArchi, dirModel, caffe.TEST)
+    #net = caffe.Net('fcn-32s-pascal-deploy.prototxt', 'fcn-32s-pascalcontext.caffemodel', caffe.TEST)
+    
+    # load image, switch to BGR, subtract mean, and make dims C x H x W for Caffe
+    return net,classRemapping
+    
+def predictImageSS(net,im,gpuDevice):
+    #t1 = time.clock();
+    in_ = np.array(im, dtype=np.float32)
+    in_ = in_[:,:,::-1]
+    in_ -= np.array((104.00698793,116.66876762,122.67891434))
+    in_ = in_.transpose((2,0,1))
+
+
+    # shape for input (data blob is N x C x H x W), set data
+    net.blobs['data'].reshape(1, *in_.shape)
+    net.blobs['data'].data[...] = in_
+    #print "predictImageSS: Prior forward pass time:", time.clock()-t1, "seconds"
+    
+    # run net and take argmax for prediction
+    if(gpuDevice>=0):
+        caffe.set_mode_gpu()
+        caffe.set_device(gpuDevice)
+    else:
+        # load net
+        caffe.set_mode_cpu()
+        
+    #t1 = time.clock();
+    net.forward()
+    #print "predictImageSS: Forward pass time:", time.clock()-t1, "seconds"
+
+
+    #t1 = time.clock();
+    outputMatrix = net.blobs['score'].data[0]
+    out = outputMatrix.argmax(axis=0)
+    #maxValues = 
+    outExp = np.exp(outputMatrix)
+    maxValues = outExp.max(axis=0)/outExp.sum(axis=0) 
+    return out,maxValues
+#    maxValues = net.blobs['score-final'].data[0].max(axis=0)
+#    for iType in range(0,len(objectType)):
+#        if(objectType[iType]==True):
+#            predictionRemappedProbability = np.zeros(out.shape)
+#            test = np.in1d(out, np.array(np.argwhere(classRemapping==objectType)))
+#            predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
+#            predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
+#    #print "predictImageSS: Post forward pass time", time.clock()-t1, "seconds"
+#    return predictionRemappedProbability
+
+
+#im = Image.open('/home/repete/Code/ros_workspace/src/fcn8_ros/src/Street2.jpg')
+##im_gray = cv2.imread("/home/repete/Code/ros_workspace/src/fcn8_ros/src/Street2.jpg", cv2.IMREAD_GRAYSCALE)
+##im_color = cv2.applyColorMap(im_gray, cv2.COLORMAP_JET)
+##dirArchi = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/fcn-8s-pascal-deploy.prototxt'
+#dirArchi = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/deploy.prototxt'
+##dirModel = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/fcn-8s-pascalcontext.caffemodel'
+#dirModel = '/home/repete/Code/ros_workspace/src/fcn8_ros/models/pascalcontext-fcn8s-heavy.caffemodel'
+#dirRemapping = "/home/repete/Code/ros_workspace/src/fcn8_ros/remappingObjectTypes.mat"
+#objectType = 8
+#net,classRemapping = initCaffeSS(dirArchi,dirModel,dirRemapping)
+#
+##secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
+##classRemappingNew = -1*np.ones(classRemapping.shape)
+##for iObj in range(0,len(np.unique(secondRemapping))):
+##    test = np.in1d(classRemapping, np.array(np.argwhere(secondRemapping==iObj)))
+##    classRemappingNew[test] = iObj
+#predictionRemapped, predictionRemappedProbability = predictImageSS(net,im,-1)
 #plt.matshow(predictionRemapped)
 #plt.matshow(predictionRemappedProbability)
+##plt.matshow(np.array(im_color))
 
-def callbackImage_received(data):
-    global inProcessing
-    if(inProcessing==False): 
-        inProcessing = True
-        cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
-    
-#    cv_image = np.array(im)
-        cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
-        print "ImageReceived! Image dim: ", cv_image.shape
-    
-        out,maxValues = predictImageSS(net,cv_image,gpuDevice)  
-#        print "Image predicted: out.shape", out.shape, "maxValues.shape",maxValues.shape
-        msgImage_SSResult = bridge.cv2_to_imgmsg(cv2.applyColorMap(np.uint8(out*255/59), cv2.COLORMAP_JET), encoding="rgb8")
-    
-        pubImage.publish(msgImage_SSResult)
-        for iType in range(0,len(objectType)):
-            if(objectType[iType]==True):
-                predictionRemappedProbability = np.zeros(out.shape)
-                test = np.in1d(out, np.array(np.argwhere(classRemappingNew==iType)))
-                predictionRemapped = np.reshape(test,(out.shape)) # True for valid classes
-                predictionRemappedProbability[predictionRemapped] = maxValues[predictionRemapped]
-                occMap = np.uint8(predictionRemappedProbability*255)
-                image_message = bridge.cv2_to_imgmsg(occMap, encoding="mono8")
-                image_message.header.frame_id = '/det/' + strParts[1] + nodeName + '/' + numbers_to_strings(iType)
-                pubImageObjs[iType].publish(image_message)
-
-        inProcessing = False
-
-
-
-
-# main
-def main():
-    print ''
-    for iType in range(0,len(objectType)):
-        if(objectType[iType]==True):
-            print 'SemanticSegmentation  publishing:"', '/det/' + strParts[1]  + nodeName + '/' + numbers_to_strings(iType), ', receiving:"', topicInName
-    
-    #print(topicInName)
-    #global soundhandle
-    
-    
-    rospy.Subscriber(topicInName, msgImage, callbackImage_received,queue_size=None)    
-    #rospy.Timer(rospy.Duration(timeBetweenEvaluation), EvaluateHumanAwareness)
-    rospy.spin()
-    rospy.Subscriber()
-
-if __name__ == '__main__':
-    main()

@@ -10,22 +10,20 @@
 	<!-- Semantic Segmentation node  -->
 	<node type="semantic_segmentation.py" name="semantic_segmentation" pkg="fcn8_ros" respawn="true" output="screen">
 		<param name="topicInName" value="/Multisense/left/image_rect_color" />
-		<param name="objectType_unknown" value="True" />
-		<param name="objectType_grass" value="True" />
-		<param name="objectType_ground" value="True" />
-		<param name="objectType_human" value="True" />
-		<param name="objectType_shelterbelt" value="True" />
-		<param name="objectType_vehicle" value="True" />
-		<param name="objectType_water" value="True" />
+		<param name="outputTopicPrefix" value="/det/Multisense/fcn8" />
+
+		<param name="visualize" value="True" />
+		<param name="topicOutVisualize" value="/det/Multisense/fcn8/visualize" />
+
+
 		<param name="imgDimWidth" value="512" />
 		<param name="imgDimHeight" value="217" />
 
 		<!-- Select GPU device, negative values selects cpu -->
-		<param name="gpuDevice" value="3" /> 
+		<param name="gpuDevice" value="-1" /> 
 
 		<param name="dirModelDescription" value="$(find fcn8_ros)/models/deploy.prototxt" />
 		<param name="dirModelVaules" value="$(find fcn8_ros)/models/pascalcontext-fcn8s-heavy.caffemodel" />
-		<param name="dirTestImage" value="$(find fcn8_ros)/src/Street2.jpg" />
 		<param name="dirRemapping" value="$(find fcn8_ros)/remappingObjectTypes.mat" />
 	</node>
 
