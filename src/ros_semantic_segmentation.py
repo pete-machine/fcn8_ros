@@ -18,14 +18,17 @@ from boundingbox_msgs.msg import ImageDetections
 #import matplotlib.pyplot as plt
 from semantic_segmentation import initCaffeSS, predictImageSS
 
-#secondRemapping = np.array([0, 0, 0, 1, 2, 0, 3, 4, 0, 5, 6])
-#0: "unknown",
-#1: "grass",
-#2: "ground",
-#3: "human",
-#4: "shelterbelt",
-#5: "vehicle",
-#6: "water",
+# 0: "SS_unknown",        # 1
+# 1: "SS_animal",         # 1
+# 2: "SS_building",       # 3 
+# 3: "SS_field",          # 4
+# 4: "SS_ground",         # 5
+# 5: "SS_obstacle",       # 1
+# 6: "SS_person",         # 0
+# 7: "SS_shelterbelt",    # 6
+# 8: "SS_sky",            # 2
+# 9: "SS_vehicle",        # 1
+# 10: "SS_water",         # 7
 secondRemapping = np.array([1,1,3,4,5,1,0,6,2,1,7])
 
 def numbers_to_strings(argument):
@@ -46,22 +49,12 @@ classids = np.unique(secondRemapping)
 nClasses = len(classids)
 
 # Must contain as many values as classes
-stuffType = np.array([False, False, True, True, True, True, True, True])
+#stuffType = np.array([False, False, True, True, True, True, True, True])
 
 classids = np.unique(secondRemapping)
 nClasses = len(classids)
 
-# 0: "SS_unknown",        # 1
-# 1: "SS_animal",         # 1
-# 2: "SS_building",       # 3 
-# 3: "SS_field",          # 4
-# 4: "SS_ground",         # 5
-# 5: "SS_obstacle",       # 1
-# 6: "SS_person",         # 0
-# 7: "SS_shelterbelt",    # 6
-# 8: "SS_sky",            # 2
-# 9: "SS_vehicle",        # 1
-# 10: "SS_water",         # 7
+
 
 
 rospy.init_node('SemanticSegmentation', anonymous=True)
@@ -85,12 +78,12 @@ if visualize:
 pubDetectionImage = rospy.Publisher(os.path.join(outputTopicPrefix,'detection_image'), ImageDetections , queue_size=10)
 
 print "dirRemapping:", dirRemapping
-strParts = topicInName.split('/')
-pubImageObjs = {}
-for idx, iType in enumerate(classids):
-    if stuffType[idx] == True:
-        topicOutName = os.path.join(outputTopicPrefix,numbers_to_strings(iType))
-        pubImageObjs[numbers_to_strings(iType)] = rospy.Publisher(topicOutName, msgImage , queue_size=10)
+#strParts = topicInName.split('/')
+#pubImageObjs = {}
+#for idx, iType in enumerate(classids):
+#    if stuffType[idx] == True:
+#        topicOutName = os.path.join(outputTopicPrefix,numbers_to_strings(iType))
+#        pubImageObjs[numbers_to_strings(iType)] = rospy.Publisher(topicOutName, msgImage , queue_size=10)
 
 #print topicOutName
 
@@ -131,23 +124,24 @@ def callbackImage_received(data):
             pubImage.publish(msgImage_SSResult)
         
         maxValues = np.uint8(maxValues*255)
+        print "maxValues.max", np.max(maxValues), "np.min(maxValues)", np.min(maxValues)
         # Define remapping using a interp1d function. NICE :D
         f = interp1d(np.arange(0,len(classRemappingNew)),classRemappingNew,kind='nearest')
         outRemapped = f(out).astype(np.int)
         
-        # For all stuff classes: Publish detection images used in image2ism. 
-        for idx,iType in enumerate(classids):    
-            if stuffType[idx] == True:
-                mask = outRemapped==iType
-                tmp = np.zeros(maxValues.shape,dtype=np.uint8)
-                tmp[mask] = maxValues[mask]
-                
-                className = numbers_to_strings(iType)
-                image_message = bridge.cv2_to_imgmsg(tmp, encoding="mono8")
-                image_message.header = data.header
-                image_message.header.frame_id = os.path.join(outputTopicPrefix,className)
-                #pubImageObjs[iType].publish(image_message)
-                pubImageObjs[className].publish(image_message)
+#        # For all stuff classes: Publish detection images used in image2ism. 
+#        for idx,iType in enumerate(classids):    
+#            if stuffType[idx] == True:
+#                mask = outRemapped==iType
+#                tmp = np.zeros(maxValues.shape,dtype=np.uint8)
+#                tmp[mask] = maxValues[mask]
+#                
+#                className = numbers_to_strings(iType)
+#                image_message = bridge.cv2_to_imgmsg(tmp, encoding="mono8")
+#                image_message.header = data.header
+#                image_message.header.frame_id = os.path.join(outputTopicPrefix,className)
+#                #pubImageObjs[iType].publish(image_message)
+#                pubImageObjs[className].publish(image_message)
         
         # Detections to be converted for to first 2D bounding boxes and later 3D.
         msg = ImageDetections()
@@ -179,11 +173,11 @@ def callbackImage_received(data):
 # main
 def main():
     print ''
-    for idx,iType in enumerate(classids):
-        if stuffType[idx] == True:
-            print 'SemanticSegmentation (forwarded to image2ism) publishing:"', os.path.join(outputTopicPrefix, numbers_to_strings(iType)), ', receiving:"', topicInName
-        else:
-            print 'SemanticSegmentation (forwarded to eventually bb2ism) publishing (' + numbers_to_strings(iType) + '):', os.path.join(outputTopicPrefix,'detectionImage'), ', receiving:"', topicInName
+#    for idx,iType in enumerate(classids):
+#        if stuffType[idx] == True:
+#            print 'SemanticSegmentation (forwarded to image2ism) publishing:"', os.path.join(outputTopicPrefix, numbers_to_strings(iType)), ', receiving:"', topicInName
+#        else:
+#            print 'SemanticSegmentation (forwarded to eventually bb2ism) publishing (' + numbers_to_strings(iType) + '):', os.path.join(outputTopicPrefix,'detectionImage'), ', receiving:"', topicInName
     
     #print(topicInName)
     #global soundhandle
