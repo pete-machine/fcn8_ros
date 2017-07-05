@@ -13,6 +13,7 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+#from tempfile import TemporaryFile
 #import matplotlib.pyplot as plt
 from semantic_segmentation import initCaffeSS, predictImageSS
 
@@ -59,7 +60,7 @@ gpuDevice = -1#rospy.get_param(nodeName+'/gpuDevice', -1) # -1 is cpu, 0-3 is gp
 dirModelVaules = "../models/pascalcontext-fcn8s-heavy.caffemodel" #rospy.get_param(nodeName+'/dirModelVaules', '/notDefined')
 imgDimWidth = 512
 imgDimHeight = 217
-dirTestImage = "Street2.jpg"
+dirTestImage = "test_img2.png"
 
 
 # RETURNS launch parameters specifying if an object is set as an output 
@@ -84,10 +85,11 @@ for iObj in range(0,len(np.unique(secondRemapping))):
 #plt.matshow(predictionRemapped)
 #plt.matshow(predictionRemappedProbability)
 
-cv_image = cv2.cvtColor(cv2.imread(dirTestImage),cv2.COLOR_BGR2RGB)
+#cv_image = cv2.cvtColor(cv2.imread(dirTestImage),cv2.COLOR_BGR2RGB)
+#cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
 
+cv_image = cv2.imread(dirTestImage)
 
-cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
 
 t1 = time.time()
 out,maxValues = predictImageSS(net,cv_image,gpuDevice)
@@ -98,19 +100,27 @@ maxValues = np.uint8(maxValues*255)
 # Define remapping using a interp1d function. NICE :D
 f = interp1d(np.arange(0,len(classRemappingNew)),classRemappingNew,kind='nearest')
 outRemapped = f(out).astype(np.int)
-for idx,iType in enumerate(classids):    
-    if stuffType[idx] == True:
-        mask = outRemapped==iType
-        tmp = np.zeros(maxValues.shape,dtype=np.uint8)
-        tmp[mask] = maxValues[mask]
+
+
+if True:
+    
+    filename = './semanticOutputData.npz'
+    np.savez(filename, imgConfidence=maxValues, imgClass=outRemapped)
+
+    out = np.load(filename)
+#for idx,iType in enumerate(classids):    
+#    if stuffType[idx] == True:
+#        mask = outRemapped==iType
+#        tmp = np.zeros(maxValues.shape,dtype=np.uint8)
+#        tmp[mask] = maxValues[mask]
     
 print "Time: ", time.time()-t1, "s"
 
 plt.figure()
 plt.imshow(cv_image)
 
-plt.figure()
-plt.imshow(out)
+#plt.figure()
+#plt.imshow(out)
 
 plt.figure()
 plt.imshow(outRemapped)

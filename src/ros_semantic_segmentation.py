@@ -111,11 +111,14 @@ def callbackImage_received(data):
         t1 = time.time()
         inProcessing = True
         cv_image = bridge.imgmsg_to_cv2(data, "rgb8")
-    
+        
+        
+        
 #    cv_image = np.array(im)
         cv_image = cv2.resize(cv_image,(imgDimWidth, imgDimHeight))
+        #cv2.imwrite('/home/pistol/Code/ros_workspaces/private/src/fcn8_ros/test_img.png',cv_image)
         print "ImageReceived! Image dim: ", cv_image.shape
-    
+        
         out,maxValues = predictImageSS(net,cv_image,gpuDevice)  
 #        print "Image predicted: out.shape", out.shape, "maxValues.shape",maxValues.shape
 
