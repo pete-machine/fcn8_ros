@@ -11,7 +11,7 @@
 	<node type="ros_semantic_segmentation.py" name="semantic_segmentation" pkg="fcn8_ros" respawn="true" output="screen">
 		<param name="topicInName" value="/Multisense/left/image_rect_color" />
 
-		<param name="outputTopicPrefix" value="/det/Multisense/fcn8" />
+		<param name="outputTopic" value="/det/Multisense/fcn8/detection_image" />
 
 		<param name="visualize" value="True" />
 		<param name="topicOutVisualize" value="/det/Multisense/fcn8/visualize" />

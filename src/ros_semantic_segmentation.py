@@ -60,7 +60,7 @@ nClasses = len(classids)
 rospy.init_node('SemanticSegmentation', anonymous=True)
 nodeName = rospy.get_name()
 topicInName  = rospy.get_param(nodeName+'/topicInName', '/imageUnknown')
-outputTopicPrefix = rospy.get_param(nodeName+'/outputTopicPrefix', nodeName+'/imageSS')
+outputTopic = rospy.get_param(nodeName+'/outputTopic', nodeName+'/imageSS')
 
 visualize = rospy.get_param(nodeName+'/visualize', False)
 topicOutVisualize = rospy.get_param(nodeName+'/topicOutVisualize', '/visualizeTopic')
@@ -75,7 +75,7 @@ imgDimHeight  = rospy.get_param(nodeName+'/imgDimHeight', 600)
 
 if visualize:
     pubImage = rospy.Publisher(topicOutVisualize, msgImage , queue_size=1)
-pubDetectionImage = rospy.Publisher(os.path.join(outputTopicPrefix,'detection_image'), ImageDetections , queue_size=10)
+pubDetectionImage = rospy.Publisher(outputTopic, ImageDetections , queue_size=10)
 
 print "dirRemapping:", dirRemapping
 #strParts = topicInName.split('/')

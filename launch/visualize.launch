@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+<!-- Show raw  
+	<node name="image_raw" pkg="image_view" type="image_view" respawn="false" output="screen">
+		<remap from="image" to="/Multisense/left/image_rect_color"/>
+		<param name="autosize" value="false" />
+	</node>
+-->
+
+	<!-- Semantic Segmentation node  -->
+	<node type="ros_visualize_fcn.py" name="ros_visualize_fcn" pkg="fcn8_ros" respawn="true" output="screen">
+		<param name="topicInName" value="/det/Multisense/fcn8/detection_image" />
+		<param name="outputTopic" value="/det/Multisense/fcn8/visualize_all_detections" />
+	</node>
+
+</launch>
